@@ -252,12 +252,14 @@ dni=0;
 dlSym=str2num(get(handles.czasSym,'String'));
 %dni - petla leci po dniach - tmax = maksymalna ilosc dni w symulacji
 while(dni<dlSym)
+                iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));  
     godzina = 8;
     godzinaStop = 22;
     %godziny = petla od godzin - potrzebna do rozliczania placy pracownikow
     %i wyznaczania ilosci pracownikow w danych godzinach
     %itd
         while (godzina<godzinaStop)
+
             if((godzina>=13 && godzina<=16) || (godzina>=18 && godzina<=21)) %wyznaczenie szybkosci przyrostu kolejek w danych godzinach
                 interwalMiedzyKlientami = exprnd(16.714285714285715); %szczyt miedzy 13 i 16 oraz 18 i 21
                 iloscKucharzy=floor(0.8*iloscBezczynnych);
