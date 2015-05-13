@@ -23,7 +23,7 @@ function varargout = okienko(varargin)
 
 % Edit the above text to modify the response to help okienko
 
-% Last Modified by GUIDE v2.5 13-May-2015 12:12:20
+% Last Modified by GUIDE v2.5 13-May-2015 16:44:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -218,50 +218,69 @@ function buttonWykonaj_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-kolejkaDoKasy=0;                        %ilosc osob w kolejce do kasy
-kolejkaDoKuchni=0;                  %ilosc zamowien oczekujacych na realizacje
-interwalMiedzyKlientami = 0;            
-iloscKasjerow=0;                     
-iloscKucharzy=0;
-iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));             %iloœæ wszystkich dostêpnych pracowników
-maxiloscKas=str2num(get(handles.maxKas,'String'));
-maxiloscKuchni=str2num(get(handles.maxKuchni,'String'));
-iloscKas=0;
-iloscKuchni=0;
-przygotowanePosilki=0;
-dochod=0;
-wyplaty=0;
+kolejkaDoKasy=0;                          %ilosc osob w kolejce do kasy
+kolejkaDoKuchni=0;                      %ilosc zamowien oczekujacych na realizacje
+interwalMiedzyKlientami = 0;        %zmienna definiuje czas miedzy dodawaniem klientow do kolejki  
+iloscKasjerow=0;                           %ilosc kasjerow w aktualnej godzinie pracy                
+iloscKucharzy=0;                            %ilosc kucharzy w aktualnej godzinie pracy
+iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));     %iloœæ wszystkich dostêpnych pracowników
+maxiloscKas=str2num(get(handles.maxKas,'String'));                             %maksymalna ilosc stanowisk kasowych
+maxiloscKuchni=str2num(get(handles.maxKuchni,'String'));                %maksymalna ilosc stanowisk kuchennych
+iloscUszkodzenKas=0;                    %ilosc uszkodzonych kas podczas calej symulacji
+iloscUszkodzenKuchni=0;              %ilosc uszkodzen urzadzen kuch podczas calej symulacji
+czasDoUszkodzeniaKas=zeros(1,maxiloscKas); %tablica przechowujaca czasy do uszkodzenia poszczegolnych kas
+czasDoUszkodzeniaKuchni=zeros(1,maxiloscKuchni);  %tablica przechowujaca czasy do uszkodzenia poszczegolnych urz kuchennych
 
-wynagrodzeniePodst=str2num(get(handles.wynagrPodst,'String'));
-wynagrodzenieKucharza=str2num(get(handles.wynagrKucharzy,'String'));
-wynagrodzenieKasjera=str2num(get(handles.wynagrKasj,'String'));
+%ustalanie czasu uszkodzenia danej kasy wg rozkladu
+for i=1:maxiloscKas
+    czasDoUszkodzeniaKas(i)=50000;  %%%%%%%%%%%%%%%%%%%%%%%%%%zmienic
+end
+%ustalanie czasu uszkodzenia danego urzadzenia kuch wg rozkladu
+for i=1:maxiloscKuchni
+    czasDoUszkodzeniaKuchni(i)=50000; %%%%%%%%%%%%%%%%%%%%%%%%%%zmienic
+end
+iloscKas=0;                                  %ilosc czynnych kas w aktualnej godzinie
+iloscKuchni=0;                             %ilosc czynnych stanowisk w kuchni w aktualnej godzinie
+kosztyNapraw=0;                         %suma kosztow napraw uszkodzen urzadzen
+przygotowanePosilki=0;              %suma wszystkich obsluzonych klientow w czasie symulacji
+nieobsluzeniKlienci=0;                %suma wszystkich nieobsluzonych klientow w czasie symulacji
+dochod=0;                                   %suma dochodow z zamowien w czasie symulacji
+wyplaty=0;                                   %suma wyplat w czasie symulacji
 
-kasaCzynna=zeros(1,maxiloscKas);
-kasaSprawna = ones(1,maxiloscKas);
-kasaWolna = ones(1,maxiloscKas);
+wynagrodzeniePodst=str2num(get(handles.wynagrPodst,'String'));                  %wynagrodzenie pracownikow w stanie bezczynnosci
+wynagrodzenieKucharza=str2num(get(handles.wynagrKucharzy,'String'));       %wynagrodzenie pracownikow na kuchni
+wynagrodzenieKasjera=str2num(get(handles.wynagrKasj,'String'));                 %wynagrodzenie pracownikow na kasie
 
-kuchniaCzynna = zeros(1,maxiloscKuchni);
-kuchniaSprawna = ones(1,maxiloscKuchni);
-kuchniaWolna = ones(1,maxiloscKuchni);
+kasaCzynna=zeros(1,maxiloscKas);                    %tablica opisujaca, ktore kasy sa czynne (otwarte)
+kasaSprawna = ones(1,maxiloscKas);                 %tablica opisujaca, ktore kasy sa sprawne 1- sprawna, 0- zepsuta, 2-naprawiana
+kasaWolna = ones(1,maxiloscKas);                    %tablica opisujaca, ktore kasy sa aktualnie wolne
 
-czasZamawiania=zeros(1,maxiloscKas);
-czasPrzygotowania=zeros(1,maxiloscKuchni);
+kuchniaCzynna = zeros(1,maxiloscKuchni);        %tablica opisujaca ktore stanowiska w kuchni sa otwarte
+kuchniaSprawna = ones(1,maxiloscKuchni);    %tablica opisujaca ktore stanowiska w kuchni sa sprawne
+kuchniaWolna = ones(1,maxiloscKuchni);          %tablica opisujaca ktore stanowiska w kuchni sa wolne
+
+czasZamawiania=zeros(1,maxiloscKas);                 %tablica opisujaca jak dlugo trwa aktualny proces zamawiania na kasie
+czasPrzygotowania=zeros(1,maxiloscKuchni);      %tablica opisujaca jak dlugo trwa aktualny proces przygotowania posilku na kuchni
+czasNaprawyKas=zeros(1,maxiloscKas);                %tablica opisujaca jak dlugo naprawia sie kasa w przypadku ewentualnej awarii
+czasNaprawyKuchni=zeros(1,maxiloscKuchni);      %tablica opisujaca jak dlugo naprawia sie urz kuchenne w przypadku ewentualnej awarii
 
 
-dni=0;
-dlSym=str2num(get(handles.czasSym,'String'));
-%dni - petla leci po dniach - tmax = maksymalna ilosc dni w symulacji
+dni=0;      %zmienna do inkrementacji dni
+dlSym=str2num(get(handles.czasSym,'String'));       %dlugos symulacji
+
 while(dni<dlSym)
-                iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));  
+            %iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));  
+            iloscKuchni=0;
+            iloscKas=0;
     godzina = 8;
     godzinaStop = 22;
     %godziny = petla od godzin - potrzebna do rozliczania placy pracownikow
     %i wyznaczania ilosci pracownikow w danych godzinach
     %itd
         while (godzina<godzinaStop)
-
+        iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));  
             if((godzina>=13 && godzina<=16) || (godzina>=18 && godzina<=21)) %wyznaczenie szybkosci przyrostu kolejek w danych godzinach
-                interwalMiedzyKlientami = exprnd(16.714285714285715); %szczyt miedzy 13 i 16 oraz 18 i 21
+                interwalMiedzyKlientami = exprnd(50.714285714285715); %szczyt miedzy 13 i 16 oraz 18 i 21
                 iloscKucharzy=floor(0.8*iloscBezczynnych);
                 iloscKasjerow=iloscBezczynnych-iloscKucharzy;
                 iloscBezczynnych=0;
@@ -285,7 +304,11 @@ while(dni<dlSym)
             kuchniaWolna = ones(1,maxiloscKuchni);
 
             
-              
+            nieobsluzeniKlienci=nieobsluzeniKlienci+kolejkaDoKasy;
+            kolejkaDoKasy=0;
+        
+        %uruchamianie stanowisk kuchennych pod warunkiem dostepnosci sprzetu
+        %i ludzi
                 for i=1:maxiloscKuchni
                     if (kuchniaCzynna(i)==0 && kuchniaSprawna(i)==1 && iloscKucharzy>0)
                         kuchniaCzynna(i)=1;
@@ -293,14 +316,15 @@ while(dni<dlSym)
                         iloscKuchni=iloscKuchni+1;
                     end
                 end
-                    
+                %uruchamianie stanowisk kasowych pod warunkiem dostepnosci sprzetu
+        %i ludzi     
                 for i=1:maxiloscKas
                     if (kasaCzynna(i)==0 && kasaSprawna(i)==1 && iloscKasjerow>0)
                         kasaCzynna(i)=1;
                         iloscKasjerow=iloscKasjerow-1;
                         iloscKas=iloscKas+1;
                     end
-                 
+             
                 end
                 
                   minuty = 1;
@@ -309,8 +333,106 @@ while(dni<dlSym)
                 sekundy=1;
                 while (sekundy<60)
                 if (interwalMiedzyKlientami<=0)
-                    kolejkaDoKasy=kolejkaDoKasy+1;          %przyrost w kolejce, jesli czas interwalu sie wyzeruje, dekrementacja na dole
+                    kolejkaDoKasy=kolejkaDoKasy+1;          
+                    %przyrost w kolejce, jesli czas interwalu sie wyzeruje, dekrementacja na dole
                 end
+                
+                %dekrementacja czasu zycia urzadzen (zu¿ywa sie tylko kiedy
+                %kasa jest uzywana, nieuzywana sie nie psuje)
+                 for i=1:maxiloscKas
+                    if (czasDoUszkodzeniaKas(i)>0 && kasaCzynna(i)==1)
+                        czasDoUszkodzeniaKas(i)= czasDoUszkodzeniaKas(i)-1;
+                    end
+                 end
+                 
+                for i=1:maxiloscKuchni
+                    if (czasDoUszkodzeniaKuchni(i)>0 && kuchniaCzynna(i)==1)
+                        czasDoUszkodzeniaKuchni(i)= czasDoUszkodzeniaKuchni(i)-1;
+                    end
+                end
+                
+                
+                %dekrementacja czasu naprawy urzadzen (naprawia sie tylko
+                %restauracja jest otwarta)
+                 for i=1:maxiloscKas
+                    if (kasaSprawna(i)==2)
+                        czasNaprawyKas(i)= czasNaprawyKas(i)-1;
+                        if (czasNaprawyKas(i)<=0)
+                        kasaSprawna(i)=1;
+                        czasDoUszkodzeniaKas(i)=50000; %%%%%%%%%%%%
+                    end
+                    end
+                     
+                 end
+                 
+                for i=1:maxiloscKuchni
+                    if (kuchniaSprawna(i)==2)
+                        czasNaprawyKuchni(i)= czasNaprawyKuchni(i)-1;
+                         if (czasNaprawyKuchni(i)<=0)
+                        kuchniaSprawna(i)=1;
+                        czasDoUszkodzeniaKuchni(i)=50000; %%%%%%%%%%%%
+                        end
+                  
+                    end
+                end
+                
+                %sprawdzenie czy kasa uszkodzi sie w momencie t
+                for i=1:maxiloscKas
+                    if (czasDoUszkodzeniaKas(i)<=0 && kasaSprawna(i)==1 && kasaCzynna(i)==1)
+                        if(kasaWolna(i)==0)
+                            kolejkaDoKasy=kolejkaDoKasy+1;
+                        end
+                        iloscUszkodzenKas=iloscUszkodzenKas+1;
+                        czasNaprawyKas(i)=80; %zmienic!!!!!!!!!!!!!!
+                        kasaCzynna(i)=0;
+                        kasaSprawna(i)=0;
+                        kasaWolna(i)=0;
+                        iloscKas=iloscKas-1;
+                        iloscKasjerow=iloscKasjerow+1;
+                      %  iloscBezczynnych=iloscBezczynnych+1;
+                    end
+                end
+              
+                 %sprawdzenie czy kuchnia uszkodzi sie w momencie t
+
+                for i=1:maxiloscKuchni
+                    if (czasDoUszkodzeniaKuchni(i)<=0 && kuchniaSprawna(i)==1 && kuchniaCzynna(i)==1)
+                        if(kuchniaWolna(i)==0)
+                            kolejkaDoKuchni=kolejkaDoKuchni+1;
+                        end
+                             iloscUszkodzenKuchni=iloscUszkodzenKuchni+1;
+                             czasNaprawyKuchni(i)=80; %zmienic!!!!!!!!!!!!!!
+                        kuchniaCzynna(i)=0;
+                        kuchniaSprawna(i)=0;
+                        kuchniaWolna(i)=0;
+                        iloscKuchni=iloscKuchni-1;
+                        iloscKucharzy=iloscKucharzy+1;
+                    %    iloscBezczynnych=iloscBezczynnych+1;
+                    end
+                end
+                
+                %sprawdzanie czy cos jest do naprawy 
+                 for i=1:maxiloscKuchni
+                    if(kuchniaSprawna(i)==0)
+                            czasNaprawyKuchni(i)=80; %tutaj trzeba zmienic!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                            kuchniaSprawna(i)=2; %znaczy ze naprawiana      
+                    end
+                 end
+                
+                 
+                 for i=1:maxiloscKas
+                    if(kasaSprawna(i)==0)
+                            czasNaprawyKas(i)=80; %tutaj trzeba zmienic!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                            kasaSprawna(i)=2; %znaczy ze naprawiana      
+                    end
+                 end
+                
+                
+                   for nrkasy=1:maxiloscKas       
+                   if (kasaSprawna(nrkasy)==2 && czasNaprawyKas(nrkasy)<=0)
+                       kasaSprawna(nrkasy)=1;
+                   end
+                   end
                 
                 %petla wrzucajaca ludzi z kolejki do wolnych kas i
                 %ustalajaca czas zamawiania dla danego czlowieka przy kasie
@@ -319,7 +441,7 @@ while(dni<dlSym)
                        kolejkaDoKasy=kolejkaDoKasy-1;
                        kasaWolna(nrkasy)=0;
                         x=rand(1,1) ;
-                       czasZamawiania(nrkasy)= (((120 - 30) * x) + 30) - mod((((120 - 30) * x) + 30) , 1);
+                       czasZamawiania(nrkasy)= (((45 - 20) * x) + 20) - mod((((45 - 20) * x) + 20) , 1);
                    end
                end
 
@@ -346,8 +468,9 @@ while(dni<dlSym)
                        kolejkaDoKuchni=kolejkaDoKuchni-1;
                        kuchniaWolna(nrkuchni)=0;
                        x=rand(1,1) ;
+                      % czasPrzygotowania(nrkuchni)=1;
                        czasPrzygotowania(nrkuchni)= (((480 - 60) * x) + 60) - mod((((480 - 60) * x) + 60) , 1);
-                      czasPrzygotowania(nrkuchni)=wblrnd(1.158774415699941e+02, 1.3222556979404211, 1,  1);
+                      %czasPrzygotowania(nrkuchni)=wblrnd(1.158774415699941e+02, 1.3222556979404211, 1,  1);
                    end
                end
                
@@ -380,7 +503,6 @@ while(dni<dlSym)
                 
                 end
             wyplaty=wyplaty+(iloscKuchni*wynagrodzenieKucharza+iloscKas*wynagrodzenieKasjera+iloscBezczynnych*wynagrodzeniePodst);
-
             godzina=godzina +1;
         end
         dni=dni+1;
@@ -391,7 +513,7 @@ set(handles.wynikDochod, 'String', dochod);
 set(handles.wynikWyplaty, 'String', wyplaty);
 set(handles.wynikZysk, 'String', dochod-wyplaty);
 set(handles.wynikSredniCzas, 'String', ((dlSym*14)/przygotowanePosilki)*60);
-
+set(handles.wynikNieobsl, 'String', nieobsluzeniKlienci);
 
 
 function czasSym_Callback(hObject, eventdata, handles)
