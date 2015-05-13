@@ -310,7 +310,7 @@ while(dni<dlSym)
         %uruchamianie stanowisk kuchennych pod warunkiem dostepnosci sprzetu
         %i ludzi
                 for i=1:maxiloscKuchni
-                    if (kuchniaCzynna(i)==0 && kuchniaSprawna(i)==1 && iloscKucharzy>0)
+                    if (kuchniaCzynna(i)==0 && kuchniaSprawna(i)==1 && iloscKucharzy>0 && iloscKuchni<maxiloscKuchni)
                         kuchniaCzynna(i)=1;
                         iloscKucharzy=iloscKucharzy-1;
                         iloscKuchni=iloscKuchni+1;
@@ -319,7 +319,7 @@ while(dni<dlSym)
                 %uruchamianie stanowisk kasowych pod warunkiem dostepnosci sprzetu
         %i ludzi     
                 for i=1:maxiloscKas
-                    if (kasaCzynna(i)==0 && kasaSprawna(i)==1 && iloscKasjerow>0)
+                    if (kasaCzynna(i)==0 && kasaSprawna(i)==1 && iloscKasjerow>0 && iloscKas<maxiloscKas)
                         kasaCzynna(i)=1;
                         iloscKasjerow=iloscKasjerow-1;
                         iloscKas=iloscKas+1;
@@ -514,6 +514,8 @@ set(handles.wynikWyplaty, 'String', wyplaty);
 set(handles.wynikZysk, 'String', dochod-wyplaty);
 set(handles.wynikSredniCzas, 'String', ((dlSym*14)/przygotowanePosilki)*60);
 set(handles.wynikNieobsl, 'String', nieobsluzeniKlienci);
+set(handles.wynikUszkodzeniaKas, 'String', iloscUszkodzenKas);
+set(handles.wynikUszkodzeniaKuchni, 'String', iloscUszkodzenKuchni);
 
 
 function czasSym_Callback(hObject, eventdata, handles)
