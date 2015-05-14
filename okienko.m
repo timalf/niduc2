@@ -212,7 +212,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in buttonWykonaj.
+% --- Executes on button press in buttonWykonaj.`
 function buttonWykonaj_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonWykonaj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -233,11 +233,11 @@ czasDoUszkodzeniaKuchni=zeros(1,maxiloscKuchni);  %tablica przechowujaca czasy d
 
 %ustalanie czasu uszkodzenia danej kasy wg rozkladu
 for i=1:maxiloscKas
-    czasDoUszkodzeniaKas(i)=50000;  %%%%%%%%%%%%%%%%%%%%%%%%%%zmienic
+    czasDoUszkodzeniaKas(i)=24300;  %%%%%%%%%%%%%%%%%%%%%%%%%%zmienic
 end
 %ustalanie czasu uszkodzenia danego urzadzenia kuch wg rozkladu
 for i=1:maxiloscKuchni
-    czasDoUszkodzeniaKuchni(i)=50000; %%%%%%%%%%%%%%%%%%%%%%%%%%zmienic
+    czasDoUszkodzeniaKuchni(i)=31600; %%%%%%%%%%%%%%%%%%%%%%%%%%zmienic
 end
 iloscKas=0;                                  %ilosc czynnych kas w aktualnej godzinie
 iloscKuchni=0;                             %ilosc czynnych stanowisk w kuchni w aktualnej godzinie
@@ -270,14 +270,17 @@ dlSym=str2num(get(handles.czasSym,'String'));       %dlugos symulacji
 
 while(dni<dlSym)
             %iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));  
-            iloscKuchni=0;
-            iloscKas=0;
     godzina = 8;
     godzinaStop = 22;
     %godziny = petla od godzin - potrzebna do rozliczania placy pracownikow
     %i wyznaczania ilosci pracownikow w danych godzinach
     %itd
         while (godzina<godzinaStop)
+            iloscKasjerow=0;
+            iloscKucharzy=0;
+            iloscKas=0;
+            iloscKuchni=0;
+            iloscBezczynnych=str2num(get(handles.maxPracownikow,'String')); 
         iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));  
             if((godzina>=13 && godzina<=16) || (godzina>=18 && godzina<=21)) %wyznaczenie szybkosci przyrostu kolejek w danych godzinach
                 interwalMiedzyKlientami = exprnd(50.714285714285715); %szczyt miedzy 13 i 16 oraz 18 i 21
@@ -298,9 +301,9 @@ while(dni<dlSym)
             
             %zerujemy stany kas i kuchni, kazda godzina to nowy okres
             %rozliczeniowy
-            kasaCzynna=zeros(1,maxiloscKas);
+           % kasaCzynna=zeros(1,maxiloscKas);
             kasaWolna = ones(1,maxiloscKas);
-            kuchniaCzynna = zeros(1,maxiloscKuchni);
+         %   kuchniaCzynna = zeros(1,maxiloscKuchni);
             kuchniaWolna = ones(1,maxiloscKuchni);
 
             
@@ -340,7 +343,7 @@ while(dni<dlSym)
                 %dekrementacja czasu zycia urzadzen (zu¿ywa sie tylko kiedy
                 %kasa jest uzywana, nieuzywana sie nie psuje)
                  for i=1:maxiloscKas
-                    if (czasDoUszkodzeniaKas(i)>0 && kasaCzynna(i)==1)
+                    if (czasDoUszkodzeniaKas(i)>0  && kasaCzynna(i)==1)
                         czasDoUszkodzeniaKas(i)= czasDoUszkodzeniaKas(i)-1;
                     end
                  end
@@ -359,7 +362,7 @@ while(dni<dlSym)
                         czasNaprawyKas(i)= czasNaprawyKas(i)-1;
                         if (czasNaprawyKas(i)<=0)
                         kasaSprawna(i)=1;
-                        czasDoUszkodzeniaKas(i)=50000; %%%%%%%%%%%%
+                        czasDoUszkodzeniaKas(i)=24300; %%%%%%%%%%%%
                     end
                     end
                      
@@ -370,7 +373,7 @@ while(dni<dlSym)
                         czasNaprawyKuchni(i)= czasNaprawyKuchni(i)-1;
                          if (czasNaprawyKuchni(i)<=0)
                         kuchniaSprawna(i)=1;
-                        czasDoUszkodzeniaKuchni(i)=50000; %%%%%%%%%%%%
+                        czasDoUszkodzeniaKuchni(i)=31600; %%%%%%%%%%%%
                         end
                   
                     end
@@ -502,7 +505,8 @@ while(dni<dlSym)
                 minuty=minuty+1;
                 
                 end
-            wyplaty=wyplaty+(iloscKuchni*wynagrodzenieKucharza+iloscKas*wynagrodzenieKasjera+iloscBezczynnych*wynagrodzeniePodst);
+                wyplaty=wyplaty+(iloscKucharzy*wynagrodzenieKucharza+iloscKasjerow*wynagrodzenieKasjera+iloscBezczynnych*wynagrodzeniePodst);
+            %wyplaty=wyplaty+(iloscKuchni*wynagrodzenieKucharza+iloscKas*wynagrodzenieKasjera+iloscBezczynnych*wynagrodzeniePodst);
             godzina=godzina +1;
         end
         dni=dni+1;
