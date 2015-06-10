@@ -1,0 +1,34 @@
+Witaj w LOGU
+4 17:13:32 Uszkodzenie kasy nr 3
+4 17:13:32 Rozpoczecie naprawy kasy nr 3
+4 18:43:52 Uszkodzenie kasy nr 4
+4 18:43:52 Rozpoczecie naprawy kasy nr 4
+4 20:21:48 Zakonczenie naprawy kasy nr 4
+4 21:48:45 Uszkodzenie kasy nr 2
+4 21:48:45 Rozpoczecie naprawy kasy nr 2
+4 21:50:28 Uszkodzenie kuchni nr 5
+4 21:50:28 Rozpoczecie naprawy kuchni nr 5
+5 8:17:24 Zakonczenie naprawy kuchni nr 5
+5 8:39:7 Uszkodzenie kasy nr 1
+5 8:39:7 Rozpoczecie naprawy kasy nr 1
+5 8:59:22 Zakonczenie naprawy kasy nr 2
+5 11:23:19 Uszkodzenie kuchni nr 4
+5 11:23:19 Rozpoczecie naprawy kuchni nr 4
+5 12:18:19 Uszkodzenie kuchni nr 3
+5 12:18:19 Rozpoczecie naprawy kuchni nr 3
+5 12:41:28 Uszkodzenie kuchni nr 1
+5 12:41:28 Rozpoczecie naprawy kuchni nr 1
+5 13:19:32 Uszkodzenie kuchni nr 2
+5 13:19:32 Rozpoczecie naprawy kuchni nr 2
+5 14:14:37 Zakonczenie naprawy kasy nr 3
+5 14:32:23 Uszkodzenie kasy nr 5
+5 14:32:23 Rozpoczecie naprawy kasy nr 5
+5 14:32:48 Zakonczenie naprawy kasy nr 5
+5 16:37:20 Zakonczenie naprawy kuchni nr 3
+5 17:8:9 Zakonczenie naprawy kuchni nr 2
+5 18:56:23 Zakonczenie naprawy kasy nr 1
+5 18:56:33 Zakonczenie naprawy kuchni nr 4
+5 19:45:49 Zakonczenie naprawy kuchni nr 1
+9 18:35:39 Uszkodzenie kasy nr 5
+9 18:35:39 Rozpoczecie naprawy kasy nr 5
+9 18:43:5 Zakonczenie naprawy kasy nr 5
