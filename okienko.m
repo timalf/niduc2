@@ -217,13 +217,11 @@ function buttonWykonaj_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonWykonaj (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-LOG = fopen ( 'log.txt' , 'a' ) 
+LOG = fopen ( 'log.txt' , 'a' )
 fprintf(LOG,'Witaj w LOGU\n');
 kolejkaDoKasy=0;                          %ilosc osob w kolejce do kasy
 kolejkaDoKuchni=0;                      %ilosc zamowien oczekujacych na realizacje
 interwalMiedzyKlientami = 0;        %zmienna definiuje czas miedzy dodawaniem klientow do kolejki
-iloscKasjerow=0;                           %ilosc kasjerow w aktualnej godzinie pracy
-iloscKucharzy=0;                            %ilosc kucharzy w aktualnej godzinie pracy
 iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));     %iloœæ wszystkich dostêpnych pracowników
 maxiloscKas=str2num(get(handles.maxKas,'String'));                             %maksymalna ilosc stanowisk kasowych
 maxiloscKuchni=str2num(get(handles.maxKuchni,'String'));                %maksymalna ilosc stanowisk kuchennych
@@ -272,6 +270,11 @@ oczekiwanie=0;
 oczekiwanieMax=dlSym*14;
 pasekOcz=waitbar(0,'Wykonywanie symulacji. Mo¿e chwilê potrwaæ');
 
+kuchniaCzynna(1)=1;
+kasaCzynna(1)=1;
+iloscKas=1;
+iloscKuchni=1;
+iloscBezczynnych=iloscBezczynnych-2;
 while(dni<dlSym)
     godzina = 8;
     godzinaStop = 22;
@@ -280,32 +283,30 @@ while(dni<dlSym)
     while (godzina<godzinaStop)
         oczekiwanie=oczekiwanie+1;
         waitbar((oczekiwanie/oczekiwanieMax),pasekOcz,'Wykonywanie symulacji. Mo¿e chwilê potrwaæ');
-        iloscKasjerow=0;
-        iloscKucharzy=0;
-        iloscKas=0;
-        iloscKuchni=0;
-        iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));
-        iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));
-        if((godzina>=13 && godzina<=16) || (godzina>=18 && godzina<=21)) 
+        %       iloscKas=0;
+        %        iloscKuchni=0;
+        %     iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));
+        %         iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));
+        if((godzina>=13 && godzina<=16) || (godzina>=18 && godzina<=21))
             %wyznaczenie szybkosci przyrostu kolejek w danych godzinach
             interwalMiedzyKlientamiPocz = wblrnd(str2num(get(handles.kli_szczytA,'String')), str2num(get(handles.kli_szczytB,'String'))); %zastoj (rano i po 21)
             interwalMiedzyKlientami=interwalMiedzyKlientamiPocz;
-            iloscKucharzy=floor(0.8*iloscBezczynnych);
-            iloscKasjerow=iloscBezczynnych-iloscKucharzy;
-            iloscBezczynnych=0;
+            %             iloscBezczynnych=floor(0.8*iloscBezczynnych);
+            %             iloscBezczynnych=iloscBezczynnych-iloscBezczynnych;
         elseif((godzina>=8 && godzina<=10) || (godzina>=20))
             interwalMiedzyKlientamiPocz = wblrnd(str2num(get(handles.kli_spokS,'String')), str2num(get(handles.kli_spokK,'String'))); %zastoj (rano i po 21)
             interwalMiedzyKlientami=interwalMiedzyKlientamiPocz;
-            iloscKucharzy=floor(0.5*iloscBezczynnych);
-            iloscKasjerow=floor(0.5*iloscBezczynnych);
-            iloscBezczynnych=iloscBezczynnych-iloscKucharzy-iloscKasjerow;
+            %             iloscBezczynnych=floor(0.5*iloscBezczynnych);
+            %             iloscBezczynnych=floor(0.5*iloscBezczynnych);
+            %             iloscBezczynnych=iloscBezczynnych-iloscBezczynnych-iloscBezczynnych;
         else
             interwalMiedzyKlientamiPocz=wblrnd(150,30);
             interwalMiedzyKlientami=interwalMiedzyKlientamiPocz;
-            iloscKucharzy=floor(0.5*iloscBezczynnych);
-            iloscKasjerow=floor(0.2*iloscBezczynnych);
-            iloscBezczynnych=iloscBezczynnych-iloscKucharzy-iloscKasjerow;
+            %             iloscBezczynnych=floor(0.5*iloscBezczynnych);
+            %             iloscBezczynnych=floor(0.2*iloscBezczynnych);
+            %             iloscBezczynnych=iloscBezczynnych-iloscBezczynnych-iloscBezczynnych;
         end
+        
         
         %zerujemy stany kas i kuchni, kazda godzina to nowy okres
         %rozliczeniowy
@@ -313,26 +314,10 @@ while(dni<dlSym)
         kasaWolna = ones(1,maxiloscKas);
         %   kuchniaCzynna = zeros(1,maxiloscKuchni);
         kuchniaWolna = ones(1,maxiloscKuchni);
-
-        %uruchamianie stanowisk kuchennych pod warunkiem dostepnosci sprzetu
-        %i ludzi
-        for i=1:maxiloscKuchni
-            if (kuchniaCzynna(i)==0 && kuchniaSprawna(i)==1 && iloscKucharzy>0 && iloscKuchni<maxiloscKuchni)
-                kuchniaCzynna(i)=1;
-                iloscKucharzy=iloscKucharzy-1;
-                iloscKuchni=iloscKuchni+1;
-            end
-        end
         
-        %uruchamianie stanowisk kasowych pod warunkiem dostepnosci sprzetu
+        %uruchamianie i zamykanie stanowisk kuchennych pod warunkiem dostepnosci sprzetu
         %i ludzi
-        for i=1:maxiloscKas
-            if (kasaCzynna(i)==0 && kasaSprawna(i)==1 && iloscKasjerow>0 && iloscKas<maxiloscKas)
-                kasaCzynna(i)=1;
-                iloscKasjerow=iloscKasjerow-1;
-                iloscKas=iloscKas+1;
-            end          
-        end
+        
         
         minuty = 1;
         %minuty - petla do obslugi zamowien, kolejki, itd
@@ -346,6 +331,56 @@ while(dni<dlSym)
                     kolejkaDoKasy=kolejkaDoKasy+1;
                     interwalMiedzyKlientami=interwalMiedzyKlientamiPocz;
                 end
+                
+                if (kolejkaDoKuchni>10)
+                    for i=1:maxiloscKuchni
+                        if (kuchniaCzynna(i)==0 && kuchniaSprawna(i)==1 && iloscBezczynnych>0 && iloscKuchni<maxiloscKuchni)
+                            kuchniaCzynna(i)=1;
+                            iloscBezczynnych=iloscBezczynnych-1;
+                            iloscKuchni=iloscKuchni+1;
+                            fprintf(LOG,'%d %d:%d:%d Otwarto kuchnie nr %d\n',dni,godzina,minuty,sekundy,i);
+                        end
+                    end
+                else
+                    for i=1:maxiloscKuchni
+                        if (kuchniaCzynna(i)==1 && iloscKuchni>1)
+                            if (kuchniaWolna(i)==0)
+                                kolejkaDoKuchni=kolejkaDoKuchni+1;
+                            end
+                            kuchniaCzynna(i)=0;
+                            iloscBezczynnych=iloscBezczynnych+1;
+                            iloscKuchni=iloscKuchni-1;
+                            fprintf(LOG,'%d %d:%d:%d Zamknieto kuchnie nr %d\n',dni,godzina,minuty,sekundy,i);
+                        end
+                    end
+                end
+                %uruchamianie stanowisk kasowych pod warunkiem dostepnosci sprzetu
+                %i ludzi
+                if (kolejkaDoKasy>10)
+                    for i=1:maxiloscKas
+                        if (kasaCzynna(i)==0 && kasaSprawna(i)==1 && iloscBezczynnych>0 && iloscKas<maxiloscKas)
+                            kasaCzynna(i)=1;
+                            iloscBezczynnych=iloscBezczynnych-1;
+                            iloscKas=iloscKas+1;
+                            fprintf(LOG,'%d %d:%d:%d Otwarto kase nr %d\n',dni,godzina,minuty,sekundy,i);
+
+                        end
+                    end
+                else
+                    for i=1:maxiloscKas
+                        if (kasaCzynna(i)==1 && iloscKas>1)
+                            if (kasaWolna(i)==0)
+                                kolejkaDoKasy=kolejkaDoKasy+1;
+                            end
+                            kasaCzynna(i)=0;
+                            iloscBezczynnych=iloscBezczynnych+1;
+                            iloscKas=iloscKas-1;
+                            fprintf(LOG,'%d %d:%d:%d Zamknieto kase nr %d\n',dni,godzina,minuty,sekundy,i);
+                        end
+                    end
+                end
+                
+                
                 
                 %dekrementacja czasu zycia urzadzen (zu¿ywa sie tylko kiedy
                 %kasa jest uzywana, nieuzywana sie nie psuje)
@@ -361,7 +396,7 @@ while(dni<dlSym)
                     end
                 end
                 
-                 %sprawdzenie czy kasa uszkodzi sie w momencie t
+                %sprawdzenie czy kasa uszkodzi sie w momencie t
                 for i=1:maxiloscKas
                     if (czasDoUszkodzeniaKas(i)<=0 && kasaSprawna(i)==1)
                         if(kasaWolna(i)==0)
@@ -372,12 +407,12 @@ while(dni<dlSym)
                         kasaSprawna(i)=0;
                         kasaWolna(i)=0;
                         iloscKas=iloscKas-1;
-                        iloscKasjerow=iloscKasjerow+1;
+                        iloscBezczynnych=iloscBezczynnych+1;
                         fprintf(LOG,'%d %d:%d:%d Uszkodzenie kasy nr %d\n',dni,godzina,minuty,sekundy,i);
                     end
                 end
                 
-                %sprawdzenie czy kuchnia uszkodzi sie w momencie t              
+                %sprawdzenie czy kuchnia uszkodzi sie w momencie t
                 for i=1:maxiloscKuchni
                     if (czasDoUszkodzeniaKuchni(i)<=0 && kuchniaSprawna(i)==1)
                         if(kuchniaWolna(i)==0)
@@ -388,12 +423,12 @@ while(dni<dlSym)
                         kuchniaSprawna(i)=0;
                         kuchniaWolna(i)=0;
                         iloscKuchni=iloscKuchni-1;
-                        iloscKucharzy=iloscKucharzy+1;
+                        iloscBezczynnych=iloscBezczynnych+1;
                         fprintf(LOG,'%d %d:%d:%d Uszkodzenie kuchni nr %d\n',dni,godzina,minuty,sekundy,i);
                     end
                 end
                 
-                          
+                
                 %dekrementacja czasu naprawy urzadzen (naprawia sie tylko
                 %kiedy restauracja jest otwarta)
                 for i=1:maxiloscKas
@@ -408,7 +443,7 @@ while(dni<dlSym)
                     end
                 end
                 
-               %sprawdzanie czy cos jest do naprawy
+                %sprawdzanie czy cos jest do naprawy
                 for i=1:maxiloscKuchni
                     if(kuchniaSprawna(i)==0)
                         x=rand(1,1) ;
@@ -419,7 +454,7 @@ while(dni<dlSym)
                         fprintf(LOG,'%d %d:%d:%d Rozpoczecie naprawy kuchni nr %d\n',dni,godzina,minuty,sekundy,i);
                     end
                 end
-                   
+                
                 for i=1:maxiloscKas
                     if(kasaSprawna(i)==0)
                         x=rand(1,1) ;
@@ -440,6 +475,8 @@ while(dni<dlSym)
                         maxnapr=str2num(get(handles.max_kosztnapr,'String'));
                         kosztyNapraw=kosztyNapraw+(((maxnapr - minnapr) * x) + minnapr) - mod((((maxnapr - minnapr) * x) + minnapr) , 1);
                         czasDoUszkodzeniaKas(i)=wblrnd(str2num(get(handles.kasa_wbA,'String')),str2num(get(handles.kasa_wbB,'String')))*60*60*14; ; %%%%%%%%%%%%
+                        fprintf(LOG,'%d %d:%d:%d Zakonczenie naprawy kasy nr %d\n',dni,godzina,minuty,sekundy,i);
+
                     end
                 end
                 
@@ -451,34 +488,35 @@ while(dni<dlSym)
                         maxnapr=str2num(get(handles.max_kosztnapr,'String'));
                         kosztyNapraw=kosztyNapraw+(((maxnapr - minnapr) * x) + minnapr) - mod((((maxnapr - minnapr) * x) + minnapr) , 1);
                         czasDoUszkodzeniaKuchni(i)=wblrnd(str2num(get(handles.kuch_wbA,'String')),str2num(get(handles.kuch_wbB,'String')))*60*60*14; %%%%%%%%%%%%
-                    end
-                end
-                 
-                %sprawdzenie czy ktores urzadznie zostalo naprawiona
-                for i=1:maxiloscKas
-                    if (kasaSprawna(i)==1 && kasaCzynna(i)==0 && iloscKasjerow>0)
-                        kasaCzynna(i)=1;
-                        kasaWolna(i)=1;
-                        iloscKasjerow=iloscKasjerow-1;
-                        fprintf(LOG,'%d %d:%d:%d Zakonczenie naprawy kasy nr %d\n',dni,godzina,minuty,sekundy,i);
+                         fprintf(LOG,'%d %d:%d:%d Zakonczenie naprawy kuchni nr %d\n',dni,godzina,minuty,sekundy,i);
                     end
                 end
                 
-                 for i=1:maxiloscKuchni
-                    if (kuchniaSprawna(i)==1 && kuchniaCzynna(i)==0 && iloscKucharzy>0)
-                        kuchniaCzynna(i)=1;
-                        kuchniaWolna(i)=1;
-                        iloscKucharzy=iloscKucharzy-1;
-                        fprintf(LOG,'%d %d:%d:%d Zakonczenie naprawy kuchni nr %d\n',dni,godzina,minuty,sekundy,i);
-                    end
-                 end
-                           
+%                 %sprawdzenie czy ktores urzadznie zostalo naprawiona
+%                 for i=1:maxiloscKas
+%                     if (kasaSprawna(i)==1 && kasaCzynna(i)==0 && iloscBezczynnych>0)
+%                         kasaCzynna(i)=1;
+%                         kasaWolna(i)=1;
+%                         iloscBezczynnych=iloscBezczynnych-1;
+%                         
+%                     end
+%                 end
+%                 
+%                 for i=1:maxiloscKuchni
+%                     if (kuchniaSprawna(i)==1 && kuchniaCzynna(i)==0 && iloscBezczynnych>0)
+%                         kuchniaCzynna(i)=1;
+%                         kuchniaWolna(i)=1;
+%                         iloscBezczynnych=iloscBezczynnych-1;
+%                       
+%                     end
+%                 end
+                
                 %petla wrzucajaca ludzi z kolejki do wolnych kas i
                 %ustalajaca czas zamawiania dla danego czlowieka przy kasie
                 for nrkasy=1:maxiloscKas
                     if (kasaCzynna(nrkasy)==1 && kasaWolna(nrkasy)==1 && kolejkaDoKasy>0)
                         kolejkaDoKasy=kolejkaDoKasy-1;
-                        kasaWolna(nrkasy)=0;                    
+                        kasaWolna(nrkasy)=0;
                         x=rand(1,1) ;
                         minzam=str2num(get(handles.min_zam,'String'));
                         maxzam=str2num(get(handles.max_zam,'String'));
@@ -521,7 +559,7 @@ while(dni<dlSym)
                 %dekrementujemy czas j/w
                 
                 for nrkuchni=1:maxiloscKuchni
-                    if (czasPrzygotowania(nrkuchni)<=0 && kuchniaCzynna(nrkuchni)==1 && kuchniaWolna(nrkuchni)==0)                      
+                    if (czasPrzygotowania(nrkuchni)<=0 && kuchniaCzynna(nrkuchni)==1 && kuchniaWolna(nrkuchni)==0)
                         kuchniaWolna(nrkuchni)=1;
                         przygotowanePosilki=przygotowanePosilki+1;
                         x=rand(1,1) ;
@@ -533,17 +571,20 @@ while(dni<dlSym)
                         end
                     end
                     czasPrzygotowania(nrkuchni)=czasPrzygotowania(nrkuchni)-1;
-                end             
+                end
+                
+                wyplaty=wyplaty+(iloscKuchni*wynagrodzenieKucharza/3600+iloscKas*wynagrodzenieKasjera/3600+iloscBezczynnych*wynagrodzeniePodst/3600);
                 
                 sekundy=sekundy+1;
             end
             minuty=minuty+1;
             
+            
         end
-        wyplaty=wyplaty+(iloscKucharzy*wynagrodzenieKucharza+iloscKasjerow*wynagrodzenieKasjera+iloscBezczynnych*wynagrodzeniePodst);
+        %      wyplaty=wyplaty+(iloscKuchni*wynagrodzenieKucharza+iloscKas*wynagrodzenieKasjera+iloscBezczynnych*wynagrodzeniePodst);
         godzina=godzina +1;
         nieobsluzeniKlienci=nieobsluzeniKlienci+kolejkaDoKasy;
-        kolejkaDoKasy=0;
+      %  kolejkaDoKasy=0;
     end
     dni=dni+1;
 end
@@ -552,7 +593,7 @@ set(handles.wynikPrzygPosil, 'String', przygotowanePosilki);
 set(handles.wynikDochod, 'String', dochod);
 set(handles.wynikWyplaty, 'String', wyplaty);
 set(handles.wynikZysk, 'String', dochod-wyplaty-kosztyNapraw);
-set(handles.wynikSredniCzas, 'String', ((dlSym*14)/przygotowanePosilki)*60);
+set(handles.wynikSredniCzas, 'String', num2str(((dlSym*14)/przygotowanePosilki)*60,2));
 set(handles.wynikNieobsl, 'String', nieobsluzeniKlienci);
 set(handles.wynikUszkodzeniaKas, 'String', iloscUszkodzenKas);
 set(handles.wynikUszkodzeniaKuchni, 'String', iloscUszkodzenKuchni);
