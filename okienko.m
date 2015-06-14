@@ -239,12 +239,14 @@ global tabz;
 global tabzysk;
 global tabdochod;
 global tabkoszty;
+global tabczas;
 taby = zeros((ustalonaMaxIloscKuchni),(ustalonaMaxIloscKas));
 tabx = [];
 tabz = [];
 tabzysk = [];
 tabdochod = [];
 tabkoszty = [];
+tabczas=[];
 tabz = 1:ustalonaMaxIloscKas;
 tabx = 1:ustalonaMaxIloscKuchni;
 
@@ -263,7 +265,7 @@ for maxiloscKas=1:ustalonaMaxIloscKas
         dochod=0;
         przygotowanePosilki=0;
         kosztyNapraw=0;
-        nieobsluzeniKlienci=0;        
+        nieobsluzeniKlienci=0;
         iloscUszkodzenKuchni=0;              %ilosc uszkodzen urzadzen kuch podczas calej symulacji
         %ustalanie czasu uszkodzenia danej kasy wg rozkladu
         for i=1:maxiloscKas
@@ -313,7 +315,7 @@ for maxiloscKas=1:ustalonaMaxIloscKas
             %godziny = petla od godzin - potrzebna do rozliczania placy pracownikow
             %i wyznaczania ilosci pracownikow w danych godzinach
             while (godzina<godzinaStop)
-               %       iloscKas=0;
+                %       iloscKas=0;
                 %        iloscKuchni=0;
                 %     iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));
                 %         iloscBezczynnych=str2num(get(handles.maxPracownikow,'String'));
@@ -596,10 +598,11 @@ for maxiloscKas=1:ustalonaMaxIloscKas
             end
             dni=dni+1;
         end
-        taby((maxiloscKuchni),(maxiloscKas)) = (dlSym*14)/przygotowanePosilki;
+        taby((maxiloscKuchni),(maxiloscKas)) = nieobsluzeniKlienci*100/(przygotowanePosilki+nieobsluzeniKlienci);
         tabzysk((maxiloscKuchni),(maxiloscKas)) = dochod-wyplaty-kosztyNapraw;
         tabdochod((maxiloscKuchni),(maxiloscKas)) = dochod;
         tabkoszty((maxiloscKuchni),(maxiloscKas)) = wyplaty+kosztyNapraw;
+        tabczas((maxiloscKuchni),(maxiloscKas))=((dlSym*14)/przygotowanePosilki)*60*60;
     end
 end
 
@@ -922,28 +925,33 @@ global taby;
 global tabzysk;
 global tabdochod;
 global tabkoszty;
-    figure;
-    title('Wykresy');
-    subplot(2, 2, 1);
-    surf(tabx, tabz, taby);
-    xlabel('Ilosc kas');
-    ylabel('Ilosc kucharzy');
-    zlabel('Ilosc obsluzonych w %');
-    subplot(2, 2, 2);
-    surf(tabx, tabz, tabzysk);
-    xlabel('Ilosc kas');
-    ylabel('Ilosc kucharzy');
-    zlabel('Zysk w z?');
-    subplot(2, 2, 3);
-    surf(tabx, tabz, tabdochod);
-    xlabel('Ilosc kas');
-    ylabel('Ilosc kucharzy');
-    zlabel('Dochody w z?');
-    subplot(2, 2, 4);
-    surf(tabx, tabz, tabkoszty);
-    xlabel('Ilosc kas');
-    ylabel('Ilosc kucharzy');
-    zlabel('Koszty w z?');
+global tabczas;
+figure;
+subplot(3, 2, 1);
+surf(tabx, tabz, taby);
+xlabel('Kasy');
+ylabel('Kuchnie');
+zlabel('Nieobs³u¿eni klienci (%)');
+subplot(3, 2, 2);
+surf(tabx, tabz, tabzysk);
+xlabel('Kasy');
+ylabel('Kuchnie');
+zlabel('Zysk(z³)');
+subplot(3, 2, 3);
+surf(tabx, tabz, tabdochod);
+xlabel('Kasy');
+ylabel('Kucjnie');
+zlabel('Przychód(z³)');
+subplot(3, 2, 4);
+surf(tabx, tabz, tabkoszty);
+xlabel('Kasy');
+ylabel('Kuchnie');
+zlabel('Koszt utrz.(z³)');
+subplot(3, 2, 5);
+surf(tabx, tabz, tabczas);
+xlabel('Kasy');
+ylabel('Kuchnie');
+zlabel('Czas obs³ (s)');
 % hObject    handle to togglebutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
